@@ -1,7 +1,6 @@
 /**
  * Madhu Chai Wala — माधु चाय वाला
  * Arc Testnet × Circle USDC × Indian Roadside Tapri
- * Multi-wallet compatibility & Responsive Tapri UI
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -21,18 +20,15 @@ import { parseAmount, usdcDecimalsFor } from '@/onchain-money'
 import { TokenUSDC } from '@web3icons/react'
 import './ChaiChainStyle.css'
 
-// ─── Chain / USDC config ──────────────────────────────────────
 const TARGET_CHAIN_ID = 5042002 // Arc Testnet
 const usdcFact = getUsdc(TARGET_CHAIN_ID)
 const USDC_ADDRESS = (usdcFact?.address ?? '0x3600000000000000000000000000000000000000') as `0x${string}`
 const CHANDA_JAR_ADDR = '0x000000000000000000000000000000000000dEaD' as `0x${string}`
 
-// ─── Helpers ──────────────────────────────────────────────────
 const fmt = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`
 const fmtUSDC = (raw: bigint): string =>
   (Number(raw) / 10 ** usdcDecimalsFor(TARGET_CHAIN_ID)).toFixed(2)
 
-// ─── Menu data ────────────────────────────────────────────────
 const MENU_ITEMS = [
   { id: 'cutting',  label: 'Cutting Chai',  hindiLabel: 'कटिंग चाय',    price: 0.25, emoji: '🫖', fillColor: '#a86030', fillH: '55%' },
   { id: 'kulhad',   label: 'Kulhad Chai',   hindiLabel: 'कुल्हड़ चाय',  price: 0.50, emoji: '🍵', fillColor: '#c47840', fillH: '50%' },
@@ -52,7 +48,6 @@ const EMPTY_CART: Cart = {
   kachori: 0, lassi: 0, paratha: 0, biscuit: 0,
 }
 
-// ─── Static / seed data ───────────────────────────────────────
 const LEDGER_SEED = [
   { addr: '0xaBcD…1234', amount: '2.50', time: '2m ago' },
   { addr: '0xDeF0…5678', amount: '1.00', time: '8m ago' },
@@ -69,42 +64,18 @@ const ROYALTY_SPLITS = [
 const DAIRY_BATCHES = [
   { id: 'गाय-BTH-4421', status: 'verified',   vol: '140 L', fat: '4.2%' },
   { id: 'गाय-BTH-4420', status: 'in-transit', vol: '120 L', fat: '3.9%' },
-  { id: 'गाय-BTH-4419', status: 'expired',    vol: '95 L',  fat: '3.5%' },
 ]
 
-const KHATA_ENTRIES = [
-  { name: 'Ramesh Ji', due: 'आज देना',   amount: 4.50, status: 'overdue' as const },
-  { name: 'Sita Devi', due: '3 दिन में', amount: 2.25, status: 'current' as const },
-  { name: 'Mohan Lal', due: 'चुकाया',    amount: 8.75, status: 'paid'    as const },
-]
-
-const KARMA_REQUESTS = [
-  { id: 1, name: 'Ajay',  reason: 'चाय-वाला घायल — मदद चाहिए',  votes: 12, icon: '🏥' },
-  { id: 2, name: 'Priya', reason: 'स्टॉल चोरी हुआ, पुनर्निर्माण', votes:  7, icon: '🔧' },
-]
-
-const VAULT_SIGNERS = [
-  { addr: '0xAB12…', signed: true  },
-  { addr: '0xCD34…', signed: true  },
-  { addr: '0xEF56…', signed: false },
-]
-
-const GARLAND = ['🌸','🌼','🌻','🌺','🌸','🌼','🌻','🌺','🌸','🌼','🌻','🌺',
-                 '🌸','🌼','🌻','🌺','🌸','🌼','🌻','🌺','🌸','🌼','🌻','🌺']
-
+const GARLAND = ['🌸','🌼','🌻','🌺','🌸','🌼','🌻','🌺','🌸','🌼','🌻','🌺']
 const SHELF_ITEMS = [
-  { icon: '🍪', label: 'Parle-G'   },
-  { icon: '🌿', label: 'Elaichi'   },
-  { icon: '🫖', label: 'Kettle'    },
-  { icon: '🫚', label: 'Adrak'     },
-  { icon: '🧂', label: 'Kurkure'   },
-  { icon: '🥛', label: 'A2 Milk'   },
-  { icon: '🫙', label: 'Murabba'   },
+  { icon: '🍪', label: 'Parle-G' },
+  { icon: '🌿', label: 'Elaichi' },
+  { icon: '🫖', label: 'Kettle'  },
+  { icon: '🫚', label: 'Adrak'   },
+  { icon: '🧂', label: 'Kurkure'},
+  { icon: '🥛', label: 'A2 Milk' },
+  { icon: '🫙', label: 'Murabba'},
 ]
-
-// =====================================================================
-// SMALL DECORATIVE COMPONENTS
-// =====================================================================
 
 function GarlandStrip() {
   return (
@@ -127,9 +98,7 @@ function ShelfDecor() {
           <span className="snack-pouch-icon">{p.icon}</span>
           {p.label === 'Kettle' && (
             <span className="kettle-steam">
-              <span className="ks-line" />
-              <span className="ks-line" />
-              <span className="ks-line" />
+              <span className="ks-line" /><span className="ks-line" /><span className="ks-line" />
             </span>
           )}
           {p.label}
@@ -143,14 +112,11 @@ function KulhadArt({ fillColor, fillH, selected }: { fillColor: string; fillH: s
   return (
     <div className={`kulhad-item-wrap${selected ? ' kulhad-selected' : ''}`}>
       <div className="kulhad-item-steam">
-        <div className="kulhad-steam-line" />
-        <div className="kulhad-steam-line" />
-        <div className="kulhad-steam-line" />
+        <div className="kulhad-steam-line" /><div className="kulhad-steam-line" /><div className="kulhad-steam-line" />
       </div>
       <div className="kulhad-item-rim" />
       <div className="kulhad-item-body">
-        <div className="kulhad-item-fill"
-          style={{ height: fillH, background: `linear-gradient(180deg,${fillColor}99,${fillColor})` }} />
+        <div className="kulhad-item-fill" style={{ height: fillH, background: `linear-gradient(180deg,${fillColor}99,${fillColor})` }} />
         <div className="kulhad-item-shine" />
       </div>
     </div>
@@ -164,16 +130,12 @@ function RingChart({ pct, size, color, stroke }: { pct: number; size: number; co
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
-      <circle cx={size/2} cy={size/2} r={r} fill="none"
-        stroke={color} strokeWidth={stroke}
-        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" />
     </svg>
   )
 }
 
-// Custom Stable Direct Wallet Connection Button
-function UniversalConnectControl() {
+function MadhuWalletConnect() {
   const { address, isConnected } = useAccount()
   const { connectors, connect } = useConnect()
   const { disconnect } = useDisconnect()
@@ -203,7 +165,7 @@ function UniversalConnectControl() {
           } else if (connectors[0]) {
             connect({ connector: connectors[0] })
           } else {
-            setOpen(!open)
+            setOpen(true)
           }
         }}
       >
@@ -213,7 +175,7 @@ function UniversalConnectControl() {
       {open && (
         <div className="modal-overlay" onClick={() => setOpen(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '320px', padding: '20px' }}>
-            <h4 style={{ color: '#F5D78E', marginBottom: '12px', textAlign: 'center' }}>Select Wallet</h4>
+            <h4 style={{ color: '#F5D78E', marginBottom: '12px', textAlign: 'center' }}>मधु चाय वाला - Select Wallet</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {connectors.map((c) => (
                 <button
@@ -236,12 +198,7 @@ function UniversalConnectControl() {
   )
 }
 
-// =====================================================================
-// MENU TAB — stateful +/- cart, expanded items, USDC pay
-// =====================================================================
-function MenuTab({
-  address, balance, chainId,
-}: { address?: `0x${string}`; balance?: bigint; chainId?: number }) {
+function MenuTab({ address, balance, chainId }: { address?: `0x${string}`; balance?: bigint; chainId?: number }) {
   const [cart, setCart] = useState<Cart>({ ...EMPTY_CART })
   const [receiptNo] = useState(() => Math.floor(1000 + Math.random() * 8999))
   const { writeContract, data: hash, isPending, isError, error } = useWriteContract()
@@ -252,17 +209,13 @@ function MenuTab({
   const cartTotal = MENU_ITEMS.reduce((s, i) => s + i.price * (cart[i.id] ?? 0), 0)
   const cartItems = MENU_ITEMS.filter((i) => cart[i.id] > 0)
 
-  const inc = (id: MenuId) => {
-    setCart((p) => ({ ...p, [id]: (p[id] ?? 0) + 1 }))
-    const item = MENU_ITEMS.find((i) => i.id === id)!
-    toast.success(`${item.emoji} ${item.hindiLabel} added`, { duration: 1400 })
-  }
+  const inc = (id: MenuId) => setCart((p) => ({ ...p, [id]: (p[id] ?? 0) + 1 }))
   const dec = (id: MenuId) => setCart((p) => ({ ...p, [id]: Math.max(0, (p[id] ?? 0) - 1) }))
 
   const handlePay = useCallback(() => {
     if (!address) { toast.error('पहले wallet connect करें'); return }
     if (chainId !== TARGET_CHAIN_ID) { switchChain({ chainId: TARGET_CHAIN_ID }); return }
-    if (cartTotal <= 0) { toast.error('कुछ तो ऑर्डर करो! Cart is empty'); return }
+    if (cartTotal <= 0) { toast.error('कुछ तो ऑर्डर करो!'); return }
     const parsed = parseAmount(TARGET_CHAIN_ID, cartTotal.toFixed(2))
     writeContract({
       address: USDC_ADDRESS, abi: erc20Abi, functionName: 'transfer',
@@ -273,7 +226,7 @@ function MenuTab({
   useEffect(() => {
     if (isSuccess && hash && handledRef.current !== hash) {
       handledRef.current = hash
-      toast.success('Shukriya! भुगतान हो गया ✅', {
+      toast.success('शुक्रिया! भुगतान सफल रहा ✅', {
         description: fmt(hash),
         action: { label: 'View', onClick: () => window.open(buildTxExplorerUrl(TARGET_CHAIN_ID, hash), '_blank') },
         duration: 5000,
@@ -283,9 +236,8 @@ function MenuTab({
   }, [isSuccess, hash])
 
   useEffect(() => {
-    if (isError) {
-      const msg = (error as Error)?.message?.toLowerCase() ?? ''
-      if (!msg.includes('user rejected')) toast.error('Payment failed — try again')
+    if (isError && error) {
+      if (!error.message.toLowerCase().includes('user rejected')) toast.error('Payment failed')
     }
   }, [isError, error])
 
@@ -294,7 +246,7 @@ function MenuTab({
       <div className="shelf-section">
         <div className="shelf-plank">
           <div className="shelf-grain" />
-          <span className="shelf-title">🍵 आज का मेनू — Today's Menu</span>
+          <span className="shelf-title">🍵 आज का मेनू — Madhu Menu</span>
           <span className="shelf-subtitle">Tap + to add</span>
         </div>
 
@@ -318,12 +270,12 @@ function MenuTab({
                 <div className="menu-card-controls">
                   {qty > 0 ? (
                     <>
-                      <button className="qty-btn dec" onClick={() => dec(item.id)} aria-label="Remove one">−</button>
+                      <button className="qty-btn dec" onClick={() => dec(item.id)}>−</button>
                       <span className="qty-count">{qty}</span>
-                      <button className="qty-btn inc" onClick={() => inc(item.id)} aria-label="Add one">+</button>
+                      <button className="qty-btn inc" onClick={() => inc(item.id)}>+</button>
                     </>
                   ) : (
-                    <button className="qty-btn add" onClick={() => inc(item.id)} aria-label={`Add ${item.label}`}>+</button>
+                    <button className="qty-btn add" onClick={() => inc(item.id)}>+</button>
                   )}
                 </div>
               </div>
@@ -334,11 +286,8 @@ function MenuTab({
         {cartItems.length > 0 && (
           <div className="ticket-receipt">
             <div className="ticket-top">
-              <span className="ticket-header-text">Madhu Chai Wala — Receipt</span>
+              <span className="ticket-header-text">मधु चाय वाला — Receipt</span>
               <span className="ticket-stamp">#{receiptNo}</span>
-            </div>
-            <div className="ticket-perforation">
-              {Array.from({ length: 24 }).map((_, i) => <div key={i} className="ticket-perf-dot" />)}
             </div>
             <div className="ticket-body">
               {cartItems.map((item) => (
@@ -359,12 +308,219 @@ function MenuTab({
         <div style={{ padding: '0 12px 14px' }}>
           {!address ? (
             <div className="connect-prompt">
-              <span className="connect-prompt-sub">☝️ Wallet connect करें, फिर chai order करें</span>
+              <span className="connect-prompt-sub">☝️ Wallet connect करें, फिर चाय ऑर्डर करें</span>
             </div>
           ) : cartTotal > 0 ? (
-            <>
+            <button className="btn-primary" onClick={handlePay} disabled={isPending || isConfirming}>
+              <TokenUSDC variant="branded" size={17} />
+              {isPending ? 'Confirming…' : isConfirming ? 'Processing…' : `Pay $${cartTotal.toFixed(2)} USDC`}
+            </button>
+          ) : (
+            <div className="status-banner info">
+              <span>ऊपर + tap करके आइटम जोड़ें।</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {balance !== undefined && (
+        <div style={{ textAlign: 'right', marginTop: 6, paddingRight: 4 }}>
+          <span className="usdc-badge">
+            <TokenUSDC variant="branded" size={11} />
+            Balance: {fmtUSDC(balance)} USDC
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FaucetTab({ address, chainId }: { address?: `0x${string}`; chainId?: number }) {
+  const [claimAmt] = useState('1.00')
+  const { writeContract: writeClaim, data: claimHash, isPending: claimPending } = useWriteContract()
+  const { isLoading: claimConfirming, isSuccess: claimSuccess } = useWaitForTransactionReceipt({ hash: claimHash })
+  const { switchChain } = useSwitchChain()
+
+  const handleClaim = useCallback(() => {
+    if (!address) { toast.error('Connect wallet first'); return }
+    if (chainId !== TARGET_CHAIN_ID) { switchChain({ chainId: TARGET_CHAIN_ID }); return }
+    writeClaim({
+      address: USDC_ADDRESS, abi: erc20Abi, functionName: 'transfer',
+      args: [address, parseAmount(TARGET_CHAIN_ID, claimAmt).raw],
+    })
+  }, [address, chainId, claimAmt, switchChain, writeClaim])
+
+  useEffect(() => {
+    if (claimSuccess) toast.success('1.00 USDC मिल गया!')
+  }, [claimSuccess])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="chai-card blue-accent">
+        <div className="card-header">
+          <div className="card-icon blue">💧</div>
+          <div>
+            <div className="card-title">Madhu Welfare Faucet</div>
+            <div className="card-subtitle">फ्री टेस्ट टोकन</div>
+          </div>
+        </div>
+        <div className="card-body">
+          <button className="btn-faucet" onClick={handleClaim} disabled={!address || claimPending || claimConfirming}>
+            💧 Claim 1.00 USDC Test Token
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DairyTab() {
+  return (
+    <div className="chai-card">
+      <div className="card-header">
+        <div className="card-icon">🐄</div>
+        <div><div className="card-title">A2 Village Dairy Ledger</div><div className="card-subtitle">शुद्ध गाय का दूध</div></div>
+      </div>
+      <div className="card-body">
+        {DAIRY_BATCHES.map((b) => (
+          <div className="dairy-batch" key={b.id}>
+            <span className="dairy-badge badge-green">Verified</span>
+            <div className="dairy-batch-info"><div className="dairy-batch-id">{b.id}</div><div className="dairy-batch-vol">{b.vol} — Fat: {b.fat}</div></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function VaultTab() {
+  return (
+    <div className="chai-card">
+      <div className="card-header">
+        <div className="card-icon">🏺</div>
+        <div><div className="card-title">Gullak Vault</div><div className="card-subtitle">गुल्लक ट्रेजरी</div></div>
+      </div>
+      <div className="card-body">
+        <div className="vault-balance"><div className="vault-bal-amount">14.88 USDC</div><div className="vault-bal-label">Locked onchain</div></div>
+      </div>
+    </div>
+  )
+}
+
+function KarmaTab({ address, chainId }: { address?: `0x${string}`; chainId?: number }) {
+  const [tipAmt] = useState('1.00')
+  const { writeContract, data: hash, isPending } = useWriteContract()
+  const { switchChain } = useSwitchChain()
+
+  return (
+    <div className="chai-card">
+      <div className="card-header">
+        <div className="card-icon">🪙</div>
+        <div><div className="card-title">Chai Ka Chanda</div><div className="card-subtitle">टिप जार — Madhu Ji</div></div>
+      </div>
+      <div className="card-body">
+        <button className="btn-primary" onClick={() => {
+          if (!address) { toast.error('Connect wallet'); return }
+          if (chainId !== TARGET_CHAIN_ID) { switchChain({ chainId: TARGET_CHAIN_ID }); return }
+          writeContract({ address: USDC_ADDRESS, abi: erc20Abi, functionName: 'transfer', args: [CHANDA_JAR_ADDR, parseAmount(TARGET_CHAIN_ID, tipAmt).raw] })
+        }} disabled={isPending}>
+          🫶 Send 1.00 USDC Tip
+        </button>
+      </div>
+    </div>
+  )
+}
+
+type Tab = 'menu' | 'faucet' | 'dairy' | 'vault' | 'karma'
+const NAV_ITEMS: { id: Tab; flower: string; label: string; hindi: string }[] = [
+  { id: 'menu',   flower: '🌸', label: 'Menu',   hindi: 'मेनू'   },
+  { id: 'faucet', flower: '💧', label: 'Chanda', hindi: 'चंदा'   },
+  { id: 'dairy',  flower: '🐄', label: 'Dairy',  hindi: 'डेयरी'  },
+  { id: 'vault',  flower: '🏺', label: 'Vault',  hindi: 'गुल्लक' },
+  { id: 'karma',  flower: '🌺', label: 'Karma',  hindi: 'कर्म'   },
+]
+
+export default function MadhuChaiWalaApp() {
+  const [tab, setTab] = useState<Tab>('menu')
+  const { address, isConnected, chainId } = useAccount()
+
+  const { data: usdcBalance } = useReadContract({
+    address: USDC_ADDRESS,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    chainId: TARGET_CHAIN_ID,
+    query: { enabled: !!address },
+  })
+
+  return (
+    <div className="chai-root" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <GarlandStrip />
+
+      <div className="tarpaulin-roof">
+        <div className="tarpaulin-row">
+          <span style={{ fontSize: 11, color: 'var(--text-lo)', fontFamily: 'var(--font-mono)' }}>Arc Testnet · USDC</span>
+          <span style={{ fontSize: 11, color: 'var(--saffron)' }}>माटी की खुशबू ✦ अपनों का प्यार</span>
+        </div>
+      </div>
+
+      <div className="chai-header">
+        <div className="chai-brand">
+          <div className="chai-brand-kulhad">
+            <div className="brand-kulhad-steam"><div className="brand-steam-line" /><div className="brand-steam-line" /></div>
+            <div className="brand-kulhad-body"><div className="brand-kulhad-rim" /></div>
+          </div>
+          <div className="chai-brand-text">
+            <div className="chai-brand-name">Madhu Chai Wala</div>
+            <div className="chai-brand-deva">मधु चाय वाला</div>
+            <div className="chai-brand-tagline">माटी की खुशबू, अपनों का प्यार</div>
+          </div>
+        </div>
+        <div className="connect-btn-wrap">
+          <MadhuWalletConnect />
+        </div>
+      </div>
+
+      <ShelfDecor />
+
+      {isConnected && address && (
+        <div className="balance-banner">
+          <div className="balance-banner-inner">
+            <span style={{ fontSize: 11, color: 'var(--text-lo)', fontFamily: 'var(--font-mono)' }}>{fmt(address)}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {chainId !== TARGET_CHAIN_ID && (
-                <div className="status-banner warning" style={{ marginBottom: 8 }}>
-                  Switch to Arc Testnet to pay
-                </div>
+                <span style={{ fontSize: 10, color: '#F1C40F', border: '1px solid #F1C40F44', borderRadius: 6, padding: '2px 7px' }}>Wrong Network</span>
               )}
+              <span className="usdc-badge">
+                <TokenUSDC variant="branded" size={12} />
+                {usdcBalance !== undefined ? fmtUSDC(usdcBalance) : '—'} USDC
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="chai-main">
+        {tab === 'menu'   && <MenuTab   address={address} balance={usdcBalance} chainId={chainId} />}
+        {tab === 'faucet' && <FaucetTab address={address} chainId={chainId} />}
+        {tab === 'dairy'  && <DairyTab />}
+        {tab === 'vault'  && <VaultTab />}
+        {tab === 'karma'  && <KarmaTab  address={address} chainId={chainId} />}
+      </div>
+
+      <nav className="fulwari-nav" aria-label="Tapri Navigation">
+        <div className="fulwari-inner">
+          <div className="fulwari-bar">
+            {NAV_ITEMS.map((n) => (
+              <button key={n.id} className={`fulwari-btn${tab === n.id ? ' active' : ''}`} onClick={() => setTab(n.id)}>
+                <span className="fulwari-flower">{n.flower}</span>
+                <span className="fulwari-label">{n.hindi}</span>
+                {tab === n.id && <span className="fulwari-active-dot" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+    </div>
+  )
+}
