@@ -1,6 +1,7 @@
 /**
  * Madhu Chai Wala — माधु चाय वाला
  * Arc Testnet × Circle USDC × Indian Roadside Tapri
+ * Full Responsive Layout with Active Desktop Widgets
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -49,14 +50,9 @@ const EMPTY_CART: Cart = {
 }
 
 const LEDGER_SEED = [
-  { addr: '0xaBcD…1234', amount: '2.50', time: '2m ago' },
-  { addr: '0xDeF0…5678', amount: '1.00', time: '8m ago' },
-  { addr: '0x9876…ABcD', amount: '5.00', time: '15m ago' },
-]
-
-const DAIRY_BATCHES = [
-  { id: 'गाय-BTH-4421', status: 'verified',   vol: '140 L', fat: '4.2%' },
-  { id: 'गाय-BTH-4420', status: 'in-transit', vol: '120 L', fat: '3.9%' },
+  { addr: '0xaBcD…1234', amount: '2.50', time: '2 min ago' },
+  { addr: '0xDeF0…5678', amount: '1.00', time: '8 min ago' },
+  { addr: '0x9876…ABcD', amount: '0.50', time: '14 min ago' },
 ]
 
 const GARLAND = ['🌸','🌼','🌻','🌺','🌸','🌼','🌻','🌺','🌸','🌼','🌻','🌺']
@@ -122,7 +118,6 @@ function MadhuWalletConnect() {
   const { disconnect } = useDisconnect()
 
   const handleConnect = () => {
-    // 1. Check if window.ethereum exists (Injected Browser Wallet like Brave/Rabby)
     if (typeof window !== 'undefined' && (window as any).ethereum) {
       const injectedConn = connectors.find(c => c.id === 'injected' || c.type === 'injected')
       if (injectedConn) {
@@ -130,12 +125,10 @@ function MadhuWalletConnect() {
         return
       }
     }
-
-    // 2. Fallback to any available connector
     if (connectors.length > 0) {
       connect({ connector: connectors[0] })
     } else {
-      toast.error('वॉलेट नहीं मिला! ब्राउज़र वॉलेट खोलें।')
+      toast.error('कोई वॉलेट नहीं मिला!')
     }
   }
 
@@ -249,7 +242,7 @@ function MenuTab({ address, balance, chainId }: { address?: `0x${string}`; balan
         </div>
 
         {cartItems.length > 0 && (
-          <div className="ticket-receipt">
+          <div className="ticket-receipt" style={{ marginTop: '16px' }}>
             <div className="ticket-top">
               <span className="ticket-header-text">मधु चाय वाला — Receipt</span>
               <span className="ticket-stamp">#{receiptNo}</span>
@@ -270,7 +263,7 @@ function MenuTab({ address, balance, chainId }: { address?: `0x${string}`; balan
           </div>
         )}
 
-        <div style={{ padding: '0 12px 14px' }}>
+        <div style={{ padding: '14px 12px' }}>
           {!address ? (
             <div className="connect-prompt">
               <span className="connect-prompt-sub">☝️ Wallet connect करें, फिर चाय ऑर्डर करें</span>
@@ -287,15 +280,104 @@ function MenuTab({ address, balance, chainId }: { address?: `0x${string}`; balan
           )}
         </div>
       </div>
+    </div>
+  )
+}
 
-      {balance !== undefined && (
-        <div style={{ textAlign: 'right', marginTop: 6, paddingRight: 4 }}>
-          <span className="usdc-badge">
-            <TokenUSDC variant="branded" size={11} />
-            Balance: {fmtUSDC(balance)} USDC
-          </span>
+function ActiveSidePanel({ address, chainId }: { address?: `0x${string}`; chainId?: number }) {
+  const [tipAmt, setTipAmt] = useState('0.50')
+  const { writeContract, isPending } = useWriteContract()
+  const { switchChain } = useSwitchChain()
+
+  const handleQuickTip = () => {
+    if (!address) { toast.error('पहले वॉलेट कनेक्ट करें'); return }
+    if (chainId !== TARGET_CHAIN_ID) { switchChain({ chainId: TARGET_CHAIN_ID }); return }
+    writeContract({
+      address: USDC_ADDRESS,
+      abi: erc20Abi,
+      functionName: 'transfer',
+      args: [CHANDA_JAR_ADDR, parseAmount(TARGET_CHAIN_ID, tipAmt).raw],
+    })
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* Widget 1: Arc Stats */}
+      <div className="chai-card">
+        <div className="card-header">
+          <div className="card-icon">⚡</div>
+          <div>
+            <div className="card-title">Arc Testnet Metrics</div>
+            <div className="card-subtitle">लाइव ऑन-चेन स्थिति</div>
+          </div>
         </div>
-      )}
+        <div className="card-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div style={{ background: '#120905', padding: '10px', borderRadius: '8px', border: '1px solid #3d1c0e' }}>
+            <div style={{ fontSize: '10px', color: '#a88060' }}>Speed</div>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#f5d78e' }}>Sub-second</div>
+          </div>
+          <div style={{ background: '#120905', padding: '10px', borderRadius: '8px', border: '1px solid #3d1c0e' }}>
+            <div style={{ fontSize: '10px', color: '#a88060' }}>Currency</div>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#2775CA' }}>USDC Native</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Widget 2: Live Quick Tip */}
+      <div className="chai-card">
+        <div className="card-header">
+          <div className="card-icon">🪙</div>
+          <div>
+            <div className="card-title">त्वरित चंदा (Quick Tip)</div>
+            <div className="card-subtitle">दुकानदार को सपोर्ट करें</div>
+          </div>
+        </div>
+        <div className="card-body">
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+            {['0.25', '0.50', '1.00'].map((amt) => (
+              <button
+                key={amt}
+                onClick={() => setTipAmt(amt)}
+                style={{
+                  flex: 1,
+                  padding: '6px',
+                  borderRadius: '6px',
+                  border: '1px solid #78350f',
+                  background: tipAmt === amt ? '#C86D3B' : '#1a0d07',
+                  color: '#fff',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                ${amt}
+              </button>
+            ))}
+          </div>
+          <button className="btn-primary" onClick={handleQuickTip} disabled={isPending} style={{ width: '100%' }}>
+            {isPending ? 'Sending…' : `Send $${tipAmt} USDC Tip`}
+          </button>
+        </div>
+      </div>
+
+      {/* Widget 3: Live Ledger Feed */}
+      <div className="chai-card">
+        <div className="card-header">
+          <div className="card-icon">📜</div>
+          <div>
+            <div className="card-title">हाल की खरीदारी</div>
+            <div className="card-subtitle">Public On-Chain Ledger</div>
+          </div>
+        </div>
+        <div className="card-body">
+          {LEDGER_SEED.map((row, i) => (
+            <div className="ledger-row" key={i}>
+              <span className="ledger-addr">{row.addr}</span>
+              <span className="ledger-amount">${row.amount}</span>
+              <span className="ledger-time">{row.time}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -320,20 +402,18 @@ function FaucetTab({ address, chainId }: { address?: `0x${string}`; chainId?: nu
   }, [claimSuccess])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div className="chai-card blue-accent">
-        <div className="card-header">
-          <div className="card-icon blue">💧</div>
-          <div>
-            <div className="card-title">Madhu Welfare Faucet</div>
-            <div className="card-subtitle">फ्री टेस्ट टोकन</div>
-          </div>
+    <div className="chai-card blue-accent">
+      <div className="card-header">
+        <div className="card-icon blue">💧</div>
+        <div>
+          <div className="card-title">Madhu Welfare Faucet</div>
+          <div className="card-subtitle">फ्री टेस्ट टोकन</div>
         </div>
-        <div className="card-body">
-          <button className="btn-faucet" onClick={handleClaim} disabled={!address || claimPending || claimConfirming}>
-            💧 Claim 1.00 USDC Test Token
-          </button>
-        </div>
+      </div>
+      <div className="card-body">
+        <button className="btn-faucet" onClick={handleClaim} disabled={!address || claimPending || claimConfirming}>
+          💧 Claim 1.00 USDC Test Token
+        </button>
       </div>
     </div>
   )
@@ -347,12 +427,10 @@ function DairyTab() {
         <div><div className="card-title">A2 Village Dairy Ledger</div><div className="card-subtitle">शुद्ध गाय का दूध</div></div>
       </div>
       <div className="card-body">
-        {DAIRY_BATCHES.map((b) => (
-          <div className="dairy-batch" key={b.id}>
-            <span className="dairy-badge badge-green">Verified</span>
-            <div className="dairy-batch-info"><div className="dairy-batch-id">{b.id}</div><div className="dairy-batch-vol">{b.vol} — Fat: {b.fat}</div></div>
-          </div>
-        ))}
+        <div className="dairy-batch">
+          <span className="dairy-badge badge-green">Verified</span>
+          <div className="dairy-batch-info"><div className="dairy-batch-id">गाय-BTH-4421</div><div className="dairy-batch-vol">140 L — Fat: 4.2%</div></div>
+        </div>
       </div>
     </div>
   )
@@ -419,7 +497,7 @@ export default function MadhuChaiWalaApp() {
   })
 
   return (
-    <div className="chai-root" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="chai-root" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px 80px' }}>
       <GarlandStrip />
 
       <div className="tarpaulin-roof">
@@ -465,12 +543,20 @@ export default function MadhuChaiWalaApp() {
         </div>
       )}
 
-      <div className="chai-main">
-        {tab === 'menu'   && <MenuTab   address={address} balance={usdcBalance} chainId={chainId} />}
-        {tab === 'faucet' && <FaucetTab address={address} chainId={chainId} />}
-        {tab === 'dairy'  && <DairyTab />}
-        {tab === 'vault'  && <VaultTab />}
-        {tab === 'karma'  && <KarmaTab  address={address} chainId={chainId} />}
+      {/* Responsive Grid Container */}
+      <div className="app-responsive-grid" style={{ marginTop: '20px' }}>
+        <div className="main-content-area">
+          {tab === 'menu'   && <MenuTab   address={address} balance={usdcBalance} chainId={chainId} />}
+          {tab === 'faucet' && <FaucetTab address={address} chainId={chainId} />}
+          {tab === 'dairy'  && <DairyTab />}
+          {tab === 'vault'  && <VaultTab />}
+          {tab === 'karma'  && <KarmaTab  address={address} chainId={chainId} />}
+        </div>
+
+        {/* Desktop Active Sidebar Panel */}
+        <div className="desktop-only-sidebar">
+          <ActiveSidePanel address={address} chainId={chainId} />
+        </div>
       </div>
 
       <nav className="fulwari-nav" aria-label="Tapri Navigation">
