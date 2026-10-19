@@ -54,13 +54,6 @@ const LEDGER_SEED = [
   { addr: '0x9876…ABcD', amount: '5.00', time: '15m ago' },
 ]
 
-const ROYALTY_SPLITS = [
-  { label: 'Madhu Ji', pct: 60, color: '#C86D3B' },
-  { label: 'Dairy',    pct: 20, color: '#2775CA' },
-  { label: 'Elaichi',  pct: 12, color: '#F1C40F' },
-  { label: 'Gas',      pct:  8, color: '#7A6A55' },
-]
-
 const DAIRY_BATCHES = [
   { id: 'गाय-BTH-4421', status: 'verified',   vol: '140 L', fat: '4.2%' },
   { id: 'गाय-BTH-4420', status: 'in-transit', vol: '120 L', fat: '3.9%' },
@@ -125,8 +118,26 @@ function KulhadArt({ fillColor, fillH, selected }: { fillColor: string; fillH: s
 
 function MadhuWalletConnect() {
   const { address, isConnected } = useAccount()
-  const { connectors, connect } = useConnect()
+  const { connectors, connect, isPending } = useConnect()
   const { disconnect } = useDisconnect()
+
+  const handleConnect = () => {
+    // 1. Check if window.ethereum exists (Injected Browser Wallet like Brave/Rabby)
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      const injectedConn = connectors.find(c => c.id === 'injected' || c.type === 'injected')
+      if (injectedConn) {
+        connect({ connector: injectedConn })
+        return
+      }
+    }
+
+    // 2. Fallback to any available connector
+    if (connectors.length > 0) {
+      connect({ connector: connectors[0] })
+    } else {
+      toast.error('वॉलेट नहीं मिला! ब्राउज़र वॉलेट खोलें।')
+    }
+  }
 
   if (isConnected && address) {
     return (
@@ -144,16 +155,10 @@ function MadhuWalletConnect() {
     <button 
       className="btn-primary" 
       style={{ borderRadius: '10px', fontSize: '13px', padding: '8px 16px', background: '#C86D3B', color: '#fff', border: 'none', cursor: 'pointer' }}
-      onClick={() => {
-        const activeConnector = connectors.find(c => c.id === 'injected' || c.type === 'injected') || connectors[0]
-        if (activeConnector) {
-          connect({ connector: activeConnector })
-        } else {
-          toast.error('कोई वॉलेट नहीं मिला!')
-        }
-      }}
+      onClick={handleConnect}
+      disabled={isPending}
     >
-      Connect Wallet
+      {isPending ? 'Connecting…' : 'Connect Wallet'}
     </button>
   )
 }
