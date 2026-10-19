@@ -1,14 +1,8 @@
-/**
- * wagmi & ConnectKit configuration — Madhu Chai Wala
- * Universal wallet support with Arc Testnet multi-RPC fallback
- */
-
 import { http, createConfig, fallback } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
 import { defineChain } from 'viem';
 import { injected, walletConnect, metaMask, coinbaseWallet } from 'wagmi/connectors';
 
-// Arc Testnet custom chain setup with stable RPC endpoints
 export const arcTestnet = defineChain({
   id: 5042002,
   name: 'Arc Testnet',
