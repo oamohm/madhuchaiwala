@@ -1,13 +1,54 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* --- Desi Stall Aesthetic & Canopy Decoration --- */
 
-* {
-  box-sizing: border-box;
+/* Top Canopy Awning for Indian Chai Stall look */
+.stall-canopy {
+  width: 100%;
+  height: 28px;
+  background: repeating-linear-gradient(
+    45deg,
+    #d97706,
+    #d97706 20px,
+    #78350f 20px,
+    #78350f 40px
+  );
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  border-bottom: 3px solid #f59e0b;
 }
 
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  min-height: 100dvh;
+/* Desktop Layout - Proper Space Utilization */
+.main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .main-container {
+    grid-template-columns: 2fr 1fr; /* Main menu on left, Order/Cart & Settlement on right */
+    align-items: start;
+  }
+  
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+/* Stall Decorative Banner & Vintage Card Style */
+.stall-card {
+  background: #1e1b18;
+  border: 1px solid #78350f;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.stall-header-title {
+  font-family: 'serif', 'Georgia';
+  color: #f59e0b;
+  text-shadow: 1px 1px 2px #000;
 }
