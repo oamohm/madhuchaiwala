@@ -1,22 +1,14 @@
 /**
- * wagmi & RainbowKit configuration — Madhu Chai Wala
- * Universal multi-wallet & Brave Browser compatibility
+ * wagmi & ConnectKit configuration — Madhu Chai Wala
+ * Universal wallet support with Arc Testnet multi-RPC fallback
  */
 
-import { http, createConfig } from 'wagmi';
+import { http, createConfig, fallback } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
 import { defineChain } from 'viem';
-import { connectorsForWallets } from '@rainbow-me/rainbowkit';
-import {
-  injectedWallet,
-  rainbowWallet,
-  metaMaskWallet,
-  coinbaseWallet,
-  walletConnectWallet,
-  braveWallet,
-} from '@rainbow-me/rainbowkit/wallets';
+import { injected, walletConnect, metaMask, coinbaseWallet } from 'wagmi/connectors';
 
-// Custom Arc Testnet Definition with Fallback RPCs
+// Arc Testnet custom chain setup with stable RPC endpoints
 export const arcTestnet = defineChain({
   id: 5042002,
   name: 'Arc Testnet',
@@ -41,32 +33,20 @@ export const arcTestnet = defineChain({
 
 const WC_PROJECT_ID = 'b56e18d47c27ab683b10814fe9495694';
 
-// RainbowKit Wallet Connectors List
-const connectors = connectorsForWallets(
-  [
-    {
-      group: 'Recommended',
-      wallets: [
-        braveWallet({ projectId: WC_PROJECT_ID }),
-        injectedWallet,
-        metaMaskWallet({ projectId: WC_PROJECT_ID }),
-        rainbowWallet({ projectId: WC_PROJECT_ID }),
-        coinbaseWallet({ appName: 'Madhu Chai Wala' }),
-        walletConnectWallet({ projectId: WC_PROJECT_ID }),
-      ],
-    },
-  ],
-  {
-    appName: 'Madhu Chai Wala',
-    projectId: WC_PROJECT_ID,
-  }
-);
-
 export const config = createConfig({
   chains: [arcTestnet, mainnet],
-  connectors,
+  connectors: [
+    injected({ shimDisconnect: true }),
+    metaMask(),
+    coinbaseWallet({ appName: 'Madhu Chai Wala' }),
+    walletConnect({ projectId: WC_PROJECT_ID }),
+  ],
   transports: {
-    [arcTestnet.id]: http('https://rpc.testnet.arc.io'),
+    [arcTestnet.id]: fallback([
+      http('https://rpc.testnet.arc.io'),
+      http('https://arc-testnet-rpc.publicnode.com'),
+      http('https://rpc.testnet.arc.network'),
+    ]),
     [mainnet.id]: http(),
   },
 });
