@@ -123,23 +123,10 @@ function KulhadArt({ fillColor, fillH, selected }: { fillColor: string; fillH: s
   )
 }
 
-function RingChart({ pct, size, color, stroke }: { pct: number; size: number; color: string; stroke: number }) {
-  const r = (size - stroke) / 2
-  const circ = 2 * Math.PI * r
-  const offset = circ - (pct / 100) * circ
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" />
-    </svg>
-  )
-}
-
 function MadhuWalletConnect() {
   const { address, isConnected } = useAccount()
   const { connectors, connect } = useConnect()
   const { disconnect } = useDisconnect()
-  const [open, setOpen] = useState(false)
 
   if (isConnected && address) {
     return (
@@ -154,47 +141,20 @@ function MadhuWalletConnect() {
   }
 
   return (
-    <div style={{ position: 'relative' }}>
-      <button 
-        className="btn-primary" 
-        style={{ borderRadius: '10px', fontSize: '13px', padding: '8px 16px', background: '#C86D3B', color: '#fff', border: 'none', cursor: 'pointer' }}
-        onClick={() => {
-          const injectedConn = connectors.find(c => c.id === 'injected' || c.name.toLowerCase().includes('brave') || c.name.toLowerCase().includes('metamask'))
-          if (injectedConn) {
-            connect({ connector: injectedConn })
-          } else if (connectors[0]) {
-            connect({ connector: connectors[0] })
-          } else {
-            setOpen(true)
-          }
-        }}
-      >
-        Connect Wallet
-      </button>
-
-      {open && (
-        <div className="modal-overlay" onClick={() => setOpen(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '320px', padding: '20px' }}>
-            <h4 style={{ color: '#F5D78E', marginBottom: '12px', textAlign: 'center' }}>मधु चाय वाला - Select Wallet</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {connectors.map((c) => (
-                <button
-                  key={c.id}
-                  className="btn-secondary"
-                  style={{ width: '100%', textAlign: 'left', padding: '10px' }}
-                  onClick={() => {
-                    connect({ connector: c })
-                    setOpen(false)
-                  }}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <button 
+      className="btn-primary" 
+      style={{ borderRadius: '10px', fontSize: '13px', padding: '8px 16px', background: '#C86D3B', color: '#fff', border: 'none', cursor: 'pointer' }}
+      onClick={() => {
+        const activeConnector = connectors.find(c => c.id === 'injected' || c.type === 'injected') || connectors[0]
+        if (activeConnector) {
+          connect({ connector: activeConnector })
+        } else {
+          toast.error('कोई वॉलेट नहीं मिला!')
+        }
+      }}
+    >
+      Connect Wallet
+    </button>
   )
 }
 
@@ -409,7 +369,7 @@ function VaultTab() {
 
 function KarmaTab({ address, chainId }: { address?: `0x${string}`; chainId?: number }) {
   const [tipAmt] = useState('1.00')
-  const { writeContract, data: hash, isPending } = useWriteContract()
+  const { writeContract, isPending } = useWriteContract()
   const { switchChain } = useSwitchChain()
 
   return (
