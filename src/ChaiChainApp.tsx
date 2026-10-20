@@ -118,7 +118,7 @@ function MadhuWalletConnect() {
   const { disconnect } = useDisconnect()
 
   const handleConnect = () => {
-    if (typeof window !== 'undefined' && (window as any).ethereum) {
+    if (typeof window !== 'undefined' && (window as unknown as { ethereum?: unknown }).ethereum) {
       const injectedConn = connectors.find(c => c.id === 'injected' || c.type === 'injected')
       if (injectedConn) {
         connect({ connector: injectedConn })
