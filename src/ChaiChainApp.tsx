@@ -156,7 +156,7 @@ function MadhuWalletConnect() {
   )
 }
 
-function MenuTab({ address, balance, chainId }: { address?: `0x${string}`; balance?: bigint; chainId?: number }) {
+function MenuTab({ address, balance: _balance, chainId }: { address?: `0x${string}`; balance?: bigint; chainId?: number }) {
   const [cart, setCart] = useState<Cart>({ ...EMPTY_CART })
   const [receiptNo] = useState(() => Math.floor(1000 + Math.random() * 8999))
   const { writeContract, data: hash, isPending, isError, error } = useWriteContract()
@@ -382,14 +382,35 @@ function ActiveSidePanel({ address, chainId }: { address?: `0x${string}`; chainI
   )
 }
 
+function ChandaJar({ fillPct = 55 }: { fillPct?: number }) {
+  return (
+    <div className="chanda-jar-wrap">
+      <div className="chanda-jar">
+        <div className="chanda-jar-lid" />
+        <div className="chanda-jar-body">
+          <div className="chanda-jar-fill" style={{ height: `${fillPct}%` }} />
+          <div className="chanda-jar-label">चंदा<br />JAR</div>
+        </div>
+        <div className="chanda-jar-base" />
+      </div>
+      <div className="chanda-jar-info">
+        <div className="chanda-jar-total">₿ USDC</div>
+        <div className="chanda-jar-sub">Arc Testnet · टेस्ट टोकन</div>
+        <div className="chanda-jar-sub" style={{ marginTop: 4 }}>मधु जी के लिए चंदा दें 🙏</div>
+      </div>
+    </div>
+  )
+}
+
 function FaucetTab({ address, chainId }: { address?: `0x${string}`; chainId?: number }) {
+  const [mode, setMode] = useState<'claim' | 'donate'>('claim')
   const [claimAmt] = useState('1.00')
   const { writeContract: writeClaim, data: claimHash, isPending: claimPending } = useWriteContract()
   const { isLoading: claimConfirming, isSuccess: claimSuccess } = useWaitForTransactionReceipt({ hash: claimHash })
   const { switchChain } = useSwitchChain()
 
   const handleClaim = useCallback(() => {
-    if (!address) { toast.error('Connect wallet first'); return }
+    if (!address) { toast.error('पहले वॉलेट कनेक्ट करें'); return }
     if (chainId !== TARGET_CHAIN_ID) { switchChain({ chainId: TARGET_CHAIN_ID }); return }
     writeClaim({
       address: USDC_ADDRESS, abi: erc20Abi, functionName: 'transfer',
@@ -397,78 +418,308 @@ function FaucetTab({ address, chainId }: { address?: `0x${string}`; chainId?: nu
     })
   }, [address, chainId, claimAmt, switchChain, writeClaim])
 
+  const handleDonate = useCallback(() => {
+    if (!address) { toast.error('पहले वॉलेट कनेक्ट करें'); return }
+    if (chainId !== TARGET_CHAIN_ID) { switchChain({ chainId: TARGET_CHAIN_ID }); return }
+    writeClaim({
+      address: USDC_ADDRESS, abi: erc20Abi, functionName: 'transfer',
+      args: [CHANDA_JAR_ADDR, parseAmount(TARGET_CHAIN_ID, '0.50').raw],
+    })
+  }, [address, chainId, switchChain, writeClaim])
+
   useEffect(() => {
-    if (claimSuccess) toast.success('1.00 USDC मिल गया!')
-  }, [claimSuccess])
+    if (claimSuccess) {
+      if (mode === 'claim') toast.success('1.00 USDC मिल गया! 🎉', { description: 'Test tokens claimed successfully' })
+      else toast.success('शुक्रिया! 🙏 Donation received')
+    }
+  }, [claimSuccess, mode])
 
   return (
-    <div className="chai-card blue-accent">
+    <div className="chai-card blue-accent" style={{ position: 'relative' }}>
+      <div className="faucet-glow" />
       <div className="card-header">
         <div className="card-icon blue">💧</div>
         <div>
-          <div className="card-title">Madhu Welfare Faucet</div>
-          <div className="card-subtitle">फ्री टेस्ट टोकन</div>
+          <div className="card-title">
+            Madhu Welfare Faucet
+            <span className="tag-welfare">FREE</span>
+          </div>
+          <div className="card-subtitle">चंदा जार — टेस्ट टोकन फ्री</div>
         </div>
       </div>
       <div className="card-body">
-        <button className="btn-faucet" onClick={handleClaim} disabled={!address || claimPending || claimConfirming}>
-          💧 Claim 1.00 USDC Test Token
-        </button>
+        {/* Chanda Jar Visual */}
+        <ChandaJar fillPct={55} />
+
+        {/* Mode Toggle */}
+        <div className="faucet-toggle" style={{ marginBottom: 14 }}>
+          <button
+            className={`faucet-toggle-btn${mode === 'claim' ? ' active' : ''}`}
+            onClick={() => setMode('claim')}
+          >
+            💧 Claim Token<br />
+            <span style={{ fontSize: 10, opacity: 0.7 }}>टोकन लो</span>
+          </button>
+          <button
+            className={`faucet-toggle-btn${mode === 'donate' ? ' active' : ''}`}
+            onClick={() => setMode('donate')}
+          >
+            🪙 Donate<br />
+            <span style={{ fontSize: 10, opacity: 0.7 }}>चंदा दो</span>
+          </button>
+        </div>
+
+        {!address ? (
+          <div className="status-banner info">
+            <span>☝️ Wallet connect करें पहले</span>
+          </div>
+        ) : mode === 'claim' ? (
+          <button className="btn-faucet" onClick={handleClaim} disabled={claimPending || claimConfirming}>
+            💧 {claimPending ? 'Confirming…' : claimConfirming ? 'Processing…' : 'Claim 1.00 USDC Test Token'}
+          </button>
+        ) : (
+          <button className="btn-terra" onClick={handleDonate} disabled={claimPending || claimConfirming}>
+            🪙 {claimPending ? 'Sending…' : 'Donate $0.50 to Madhu Ji 🙏'}
+          </button>
+        )}
       </div>
     </div>
   )
 }
+
+const DAIRY_BATCHES = [
+  { id: 'गाय-BTH-4421', vol: '140 L', fat: '4.2%', status: 'verified', badge: 'badge-green', label: 'Verified ✓', time: 'आज सुबह' },
+  { id: 'गाय-BTH-4420', vol: '120 L', fat: '4.0%', status: 'transit',  badge: 'badge-yellow', label: 'In Transit', time: 'कल शाम' },
+  { id: 'गाय-BTH-4419', vol: '155 L', fat: '4.5%', status: 'delivered', badge: 'badge-green', label: 'Delivered', time: '2 दिन पहले' },
+]
 
 function DairyTab() {
   return (
     <div className="chai-card">
       <div className="card-header">
         <div className="card-icon">🐄</div>
-        <div><div className="card-title">A2 Village Dairy Ledger</div><div className="card-subtitle">शुद्ध गाय का दूध</div></div>
+        <div>
+          <div className="card-title">
+            A2 Village Dairy Ledger
+            <span className="tag-new">LIVE</span>
+          </div>
+          <div className="card-subtitle">शुद्ध गाय का दूध — ऑन-चेन ट्रैकिंग</div>
+        </div>
       </div>
       <div className="card-body">
-        <div className="dairy-batch">
-          <span className="dairy-badge badge-green">Verified</span>
-          <div className="dairy-batch-info"><div className="dairy-batch-id">गाय-BTH-4421</div><div className="dairy-batch-vol">140 L — Fat: 4.2%</div></div>
+        {/* Stat Row */}
+        <div className="dairy-stat-row">
+          <div className="dairy-stat">
+            <span className="dairy-stat-val">415 L</span>
+            <span className="dairy-stat-label">कुल दूध</span>
+          </div>
+          <div className="dairy-stat">
+            <span className="dairy-stat-val">4.2%</span>
+            <span className="dairy-stat-label">Avg Fat</span>
+          </div>
+          <div className="dairy-stat">
+            <span className="dairy-stat-val">3</span>
+            <span className="dairy-stat-label">Batches</span>
+          </div>
+        </div>
+
+        <div style={{ fontSize: 11, color: 'var(--text-lo)', marginBottom: 8, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+          हाल के बैच — Recent Batches
+        </div>
+
+        {DAIRY_BATCHES.map((b) => (
+          <div className="dairy-batch" key={b.id}>
+            <span className={`dairy-badge ${b.badge}`}>{b.label}</span>
+            <div className="dairy-batch-info">
+              <div className="dairy-batch-id">{b.id}</div>
+              <div className="dairy-batch-vol">{b.vol} — Fat: {b.fat}</div>
+            </div>
+            <span style={{ fontSize: 10, color: 'var(--text-lo)', flexShrink: 0 }}>{b.time}</span>
+          </div>
+        ))}
+
+        <div className="status-banner success" style={{ marginTop: 10, marginBottom: 0 }}>
+          <span>✅ A2 प्रमाणित — Onchain verified supply chain</span>
         </div>
       </div>
     </div>
   )
 }
 
-function VaultTab() {
+function VaultRing({ pct }: { pct: number }) {
+  const r = 34
+  const circ = 2 * Math.PI * r
+  const dash = (pct / 100) * circ
   return (
-    <div className="chai-card">
-      <div className="card-header">
-        <div className="card-icon">🏺</div>
-        <div><div className="card-title">Gullak Vault</div><div className="card-subtitle">गुल्लक ट्रेजरी</div></div>
-      </div>
-      <div className="card-body">
-        <div className="vault-balance"><div className="vault-bal-amount">14.88 USDC</div><div className="vault-bal-label">Locked onchain</div></div>
+    <div className="vault-ring-wrap">
+      <svg width="80" height="80" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+        <circle
+          cx="40" cy="40" r={r}
+          fill="none"
+          stroke="#60CDFF"
+          strokeWidth="8"
+          strokeDasharray={`${dash} ${circ}`}
+          strokeLinecap="round"
+          transform="rotate(-90 40 40)"
+          style={{ filter: 'drop-shadow(0 0 6px rgba(0,210,255,0.5))' }}
+        />
+      </svg>
+      <div className="vault-ring-center">
+        <span className="vault-pct">{pct}%</span>
+        <span className="vault-label">locked</span>
       </div>
     </div>
   )
 }
 
-function KarmaTab({ address, chainId }: { address?: `0x${string}`; chainId?: number }) {
-  const [tipAmt] = useState('1.00')
-  const { writeContract, isPending } = useWriteContract()
-  const { switchChain } = useSwitchChain()
+function VaultTab() {
+  const locked = 14.88
+  const target = 50.00
+  const pct = Math.round((locked / target) * 100)
 
   return (
     <div className="chai-card">
       <div className="card-header">
-        <div className="card-icon">🪙</div>
-        <div><div className="card-title">Chai Ka Chanda</div><div className="card-subtitle">टिप जार — Madhu Ji</div></div>
+        <div className="card-icon">🏺</div>
+        <div>
+          <div className="card-title">Gullak Vault</div>
+          <div className="card-subtitle">गुल्लक ट्रेजरी — Madhu Ji Savings</div>
+        </div>
       </div>
       <div className="card-body">
-        <button className="btn-primary" onClick={() => {
-          if (!address) { toast.error('Connect wallet'); return }
-          if (chainId !== TARGET_CHAIN_ID) { switchChain({ chainId: TARGET_CHAIN_ID }); return }
-          writeContract({ address: USDC_ADDRESS, abi: erc20Abi, functionName: 'transfer', args: [CHANDA_JAR_ADDR, parseAmount(TARGET_CHAIN_ID, tipAmt).raw] })
-        }} disabled={isPending}>
-          🫶 Send 1.00 USDC Tip
-        </button>
+        {/* Ring chart */}
+        <VaultRing pct={pct} />
+
+        <div className="vault-balance">
+          <div className="vault-bal-amount">{locked.toFixed(2)} USDC</div>
+          <div className="vault-bal-label">
+            Locked onchain · लक्ष्य: ${target.toFixed(0)} USDC
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ marginTop: 12, marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontSize: 10, color: 'var(--text-lo)' }}>जमा हुआ (Saved)</span>
+            <span style={{ fontSize: 10, color: 'var(--text-lo)' }}>बाकी (Remaining): ${(target - locked).toFixed(2)}</span>
+          </div>
+          <div className="split-bar">
+            <div className="split-segment" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#2775CA,#60CDFF)' }} />
+          </div>
+        </div>
+
+        {/* Sig chips — mock multisig signers */}
+        <div style={{ fontSize: 10, color: 'var(--text-lo)', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Multisig दस्तखत — Signers
+        </div>
+        <div className="vault-sigs">
+          <div className="sig-chip signed">✅ 0xAbCd…1234</div>
+          <div className="sig-chip signed">✅ 0x9876…FFee</div>
+          <div className="sig-chip unsigned">⏳ 0xDEF0…5678</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const KARMA_REQUESTS = [
+  { icon: '👩‍🍳', name: 'Savitri Devi', nameHindi: 'सावित्री देवी', reason: 'बच्चों की फीस — School fees', ask: '2.00', votes: 14 },
+  { icon: '👴', name: 'Ramu Kaka',   nameHindi: 'रामू काका',   reason: 'दवाई — Medical support',  ask: '1.50', votes: 9  },
+  { icon: '🧑‍🌾', name: 'Kiran Bai',  nameHindi: 'किरण बाई',  reason: 'खेती बीज — Seeds for farm', ask: '3.00', votes: 21 },
+]
+
+function KarmaTab({ address, chainId }: { address?: `0x${string}`; chainId?: number }) {
+  const [tipAmt, setTipAmt] = useState('1.00')
+  const { writeContract, isPending } = useWriteContract()
+  const { switchChain } = useSwitchChain()
+  const [voted, setVoted] = useState<Set<string>>(new Set())
+
+  const handleTip = useCallback(() => {
+    if (!address) { toast.error('पहले वॉलेट कनेक्ट करें'); return }
+    if (chainId !== TARGET_CHAIN_ID) { switchChain({ chainId: TARGET_CHAIN_ID }); return }
+    writeContract({ address: USDC_ADDRESS, abi: erc20Abi, functionName: 'transfer', args: [CHANDA_JAR_ADDR, parseAmount(TARGET_CHAIN_ID, tipAmt).raw] })
+  }, [address, chainId, switchChain, tipAmt, writeContract])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Artisan Story Card */}
+      <div className="chai-card">
+        <div className="card-header">
+          <div className="card-icon">🪙</div>
+          <div>
+            <div className="card-title">Chai Ka Chanda</div>
+            <div className="card-subtitle">कर्म पूल — Tip Jar for Madhu Ji</div>
+          </div>
+        </div>
+        <div className="card-body">
+          <div className="artisan-story">
+            <div className="artisan-avatar">👨‍🍳</div>
+            <div className="artisan-text">
+              <div className="artisan-name">Madhu Ji — मधु जी</div>
+              <div className="artisan-village">🏡 Varanasi, Uttar Pradesh</div>
+              <div className="artisan-desc">
+                20 साल से चाय बना रहे हैं। हर कप में प्यार है, हर घूंट में जिंदगी।
+                Running his tapri for 20 years — every cup made with heart.
+              </div>
+            </div>
+          </div>
+
+          {/* Tip amount chips */}
+          <div className="tip-amounts" style={{ marginTop: 14 }}>
+            {['0.25', '0.50', '1.00'].map((a) => (
+              <button
+                key={a}
+                className={`tip-chip${tipAmt === a ? ' active' : ''}`}
+                onClick={() => setTipAmt(a)}
+              >
+                ${a}
+              </button>
+            ))}
+          </div>
+
+          <button className="btn-primary" onClick={handleTip} disabled={isPending || !address}>
+            🫶 {isPending ? 'Sending…' : `Send $${tipAmt} USDC Tip`}
+          </button>
+        </div>
+      </div>
+
+      {/* Community Karma Requests */}
+      <div className="chai-card">
+        <div className="card-header">
+          <div className="card-icon">🌺</div>
+          <div>
+            <div className="card-title">सामुदायिक मदद</div>
+            <div className="card-subtitle">Community Help Requests</div>
+          </div>
+        </div>
+        <div className="card-body">
+          {KARMA_REQUESTS.map((req) => (
+            <div className="karma-request" key={req.name}>
+              <div className="karma-req-icon">{req.icon}</div>
+              <div className="karma-req-info">
+                <div className="karma-req-name">{req.nameHindi} · {req.name}</div>
+                <div className="karma-req-reason">{req.reason}</div>
+                <div style={{ fontSize: 10, color: 'var(--usdc-cyan)', marginTop: 2 }}>
+                  ${req.ask} USDC · {req.votes + (voted.has(req.name) ? 1 : 0)} votes
+                </div>
+              </div>
+              {voted.has(req.name) ? (
+                <button className="karma-vote-btn yes" disabled>✅ Voted</button>
+              ) : (
+                <button
+                  className="karma-vote-btn yes"
+                  onClick={() => setVoted((p) => new Set([...p, req.name]))}
+                >
+                  🫶 Yes
+                </button>
+              )}
+            </div>
+          ))}
+          <div className="status-banner info" style={{ marginTop: 10, marginBottom: 0 }}>
+            <span>वोट करें, खिलाएं — Vote to fund community needs</span>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -544,7 +795,7 @@ export default function MadhuChaiWalaApp() {
       )}
 
       {/* Responsive Grid Container */}
-      <div className="app-responsive-grid" style={{ marginTop: '20px' }}>
+      <div className="app-responsive-grid" style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
         <div className="main-content-area">
           {tab === 'menu'   && <MenuTab   address={address} balance={usdcBalance} chainId={chainId} />}
           {tab === 'faucet' && <FaucetTab address={address} chainId={chainId} />}

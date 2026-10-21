@@ -27,14 +27,32 @@
 
 @media (min-width: 1024px) {
   .main-container {
-    grid-template-columns: 2fr 1fr; /* Main menu on left, Order/Cart & Settlement on right */
+    grid-template-columns: 2fr 1fr;
     align-items: start;
   }
-  
-  .menu-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+}
+
+/* ── Responsive two-column grid for ChaiChainApp ──────────── */
+.app-responsive-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.desktop-only-sidebar {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .app-responsive-grid {
+    grid-template-columns: 1fr 320px !important;
+    align-items: start;
+  }
+
+  .desktop-only-sidebar {
+    display: block;
+    position: sticky;
+    top: 60px;
   }
 }
 

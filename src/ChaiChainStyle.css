@@ -1,59 +1,65 @@
 /* ============================================================
    Madhu Chai Wala — माधु चाय वाला
-   Arc + Circle USDC Hybrid × Indian Rural Heritage
+   Arc Network Dark × Indian Tapri Collage
    Palette:
-     Arc Slate    #0D111C / #131A2A / #1C2540
-     Terracotta   #C86D3B / #8B4513 / #A0522D
-     Saffron      #F1C40F / #E8A838
-     USDC Blue    #2775CA / #00D2FF
-     Text         #F0EAD6 / #C8B99A / #7A6A55
+     Arc Black    #0D0E12 / #121318 / #17191F
+     Arc Surface  #1C1E26 / #22252F
+     Arc Accent   #2775CA / #00D2FF / #4B9EFF
+     Saffron      #F1C40F / #E8A838  (kept for Indian warmth)
+     Terracotta   #C86D3B            (kept for kulhad art only)
+     Text         #F4F5F7 / #A8B2C4 / #545C6E
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* ── CSS Custom Properties ───────────────────────────────── */
 :root {
-  /* Arc dark backgrounds */
-  --bg-root:       #0D111C;
-  --bg-deep:       #0D111C;
-  --bg-mid:        #131A2A;
-  --bg-surface:    #1C2540;
-  --bg-card:       #1A2035;
-  --bg-card-alt:   #1E2845;
-  --bg-shelf:      #3a2010;
+  /* Arc Network dark backgrounds */
+  --bg-root:       #0D0E12;
+  --bg-deep:       #0D0E12;
+  --bg-mid:        #121318;
+  --bg-surface:    #17191F;
+  --bg-card:       #1C1E26;
+  --bg-card-alt:   #22252F;
+  --bg-shelf:      #1C1E26;
 
-  /* Terracotta / clay warm accents */
+  /* Terracotta kept only for kulhad art (CSS artwork) */
   --terra:         #C86D3B;
   --terra-dk:      #8B4513;
   --terra-lt:      #D4834E;
   --clay:          #A0522D;
+
+  /* Indian warm accents — saffron for Hindi labels & garland */
   --saffron:       #F1C40F;
   --saffron-dk:    #E8A838;
-  --cream:         #F0EAD6;
+  --cream:         #F4F5F7;
   --marigold:      #FF8C00;
 
-  /* USDC / Circle brand */
+  /* Arc / USDC brand — primary accent system */
   --usdc-blue:     #2775CA;
-  --usdc-blue-lt:  #3D8FE0;
+  --usdc-blue-lt:  #4B9EFF;
   --usdc-cyan:     #00D2FF;
-  --usdc-glow:     rgba(39, 117, 202, 0.25);
+  --arc-accent:    #2775CA;
+  --arc-glow:      rgba(39, 117, 202, 0.22);
+  --usdc-glow:     rgba(39, 117, 202, 0.22);
 
-  /* Text */
-  --text-hi:       #F0EAD6;
-  --text-mid:      #C8B99A;
-  --text-lo:       #7A6A55;
-  --text-dark:     #0D111C;
+  /* Text — crisp light on dark */
+  --text-hi:       #F4F5F7;
+  --text-mid:      #A8B2C4;
+  --text-lo:       #545C6E;
+  --text-dark:     #0D0E12;
 
-  /* Borders */
-  --border-terra:  rgba(200, 109, 59, 0.30);
+  /* Borders — glass-thin for poster feel */
+  --border-terra:  rgba(39, 117, 202, 0.18);
   --border-blue:   rgba(39, 117, 202, 0.30);
-  --border-saff:   rgba(241, 196, 15, 0.35);
-  --border-glass:  rgba(255, 255, 255, 0.07);
+  --border-saff:   rgba(241, 196, 15, 0.30);
+  --border-glass:  rgba(255, 255, 255, 0.06);
+  --border-arc:    rgba(39, 117, 202, 0.35);
 
   /* Shadows */
-  --shadow-card:   0 4px 24px rgba(0,0,0,0.45);
-  --shadow-terra:  0 4px 20px rgba(200, 109, 59, 0.18);
-  --shadow-blue:   0 4px 20px rgba(39, 117, 202, 0.25);
+  --shadow-card:   0 2px 20px rgba(0,0,0,0.6);
+  --shadow-terra:  0 4px 20px rgba(39, 117, 202, 0.18);
+  --shadow-blue:   0 4px 24px rgba(39, 117, 202, 0.28);
 
   /* Fonts */
   --font-display: 'Space Grotesk', sans-serif;
