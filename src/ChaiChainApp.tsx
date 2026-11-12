@@ -16,7 +16,7 @@ import {
 } from 'wagmi'
 import { erc20Abi } from 'viem'
 import { toast } from 'sonner'
-import { getUsdc, buildTxExplorerUrl } from '@/onchain-facts'
+import { getUsdc, buildTxExplorerUrl, buildAddressExplorerUrl } from '@/onchain-facts'
 import { parseAmount, usdcDecimalsFor } from '@/onchain-money'
 import { TokenUSDC } from '@web3icons/react'
 import './ChaiChainStyle.css'
@@ -24,7 +24,9 @@ import './ChaiChainStyle.css'
 const TARGET_CHAIN_ID = 5042002 // Arc Testnet
 const usdcFact = getUsdc(TARGET_CHAIN_ID)
 const USDC_ADDRESS = (usdcFact?.address ?? '0x3600000000000000000000000000000000000000') as `0x${string}`
-const CHANDA_JAR_ADDR = '0x000000000000000000000000000000000000dEaD' as `0x${string}`
+// Shop owner's wallet — all payments, tips and donations arrive here.
+const CHANDA_JAR_ADDR = '0x1C248d40eeA69a4662AF4F475D8dbA06d556f628' as `0x${string}`
+const FAUCET_URL = 'https://faucet.circle.com'
 
 const fmt = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`
 const fmtUSDC = (raw: bigint): string =>
@@ -48,12 +50,6 @@ const EMPTY_CART: Cart = {
   cutting: 0, kulhad: 0, masala: 0, samosa: 0,
   kachori: 0, lassi: 0, paratha: 0, biscuit: 0,
 }
-
-const LEDGER_SEED = [
-  { addr: '0xaBcD…1234', amount: '2.50', time: '2 min ago' },
-  { addr: '0xDeF0…5678', amount: '1.00', time: '8 min ago' },
-  { addr: '0x9876…ABcD', amount: '0.50', time: '14 min ago' },
-]
 
 const GARLAND = ['🌸','🌼','🌻','🌺','🌸','🌼','🌻','🌺','🌸','🌼','🌻','🌺']
 const SHELF_ITEMS = [
@@ -177,7 +173,7 @@ function MenuTab({ address, balance: _balance, chainId }: { address?: `0x${strin
     const parsed = parseAmount(TARGET_CHAIN_ID, cartTotal.toFixed(2))
     writeContract({
       address: USDC_ADDRESS, abi: erc20Abi, functionName: 'transfer',
-      args: [address, parsed.raw],
+      args: [CHANDA_JAR_ADDR, parsed.raw],
     })
   }, [address, chainId, cartTotal, switchChain, writeContract])
 
@@ -369,13 +365,18 @@ function ActiveSidePanel({ address, chainId }: { address?: `0x${string}`; chainI
           </div>
         </div>
         <div className="card-body">
-          {LEDGER_SEED.map((row, i) => (
-            <div className="ledger-row" key={i}>
-              <span className="ledger-addr">{row.addr}</span>
-              <span className="ledger-amount">${row.amount}</span>
-              <span className="ledger-time">{row.time}</span>
-            </div>
-          ))}
+          <div style={{ fontSize: 12, color: 'var(--text-lo)', lineHeight: 1.6 }}>
+            सारी खरीदारी दुकान के वॉलेट में आती है। असली लेन-देन नीचे के लिंक पर देखें।
+          </div>
+          <a
+            href={buildAddressExplorerUrl(TARGET_CHAIN_ID, CHANDA_JAR_ADDR)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary"
+            style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: 10 }}
+          >
+            ArcScan पर देखें ↗
+          </a>
         </div>
       </div>
     </div>
@@ -404,19 +405,14 @@ function ChandaJar({ fillPct = 55 }: { fillPct?: number }) {
 
 function FaucetTab({ address, chainId }: { address?: `0x${string}`; chainId?: number }) {
   const [mode, setMode] = useState<'claim' | 'donate'>('claim')
-  const [claimAmt] = useState('1.00')
   const { writeContract: writeClaim, data: claimHash, isPending: claimPending } = useWriteContract()
   const { isLoading: claimConfirming, isSuccess: claimSuccess } = useWaitForTransactionReceipt({ hash: claimHash })
   const { switchChain } = useSwitchChain()
 
+  // Test USDC comes from Circle's official faucet — this app cannot mint tokens.
   const handleClaim = useCallback(() => {
-    if (!address) { toast.error('पहले वॉलेट कनेक्ट करें'); return }
-    if (chainId !== TARGET_CHAIN_ID) { switchChain({ chainId: TARGET_CHAIN_ID }); return }
-    writeClaim({
-      address: USDC_ADDRESS, abi: erc20Abi, functionName: 'transfer',
-      args: [address, parseAmount(TARGET_CHAIN_ID, claimAmt).raw],
-    })
-  }, [address, chainId, claimAmt, switchChain, writeClaim])
+    window.open(FAUCET_URL, '_blank', 'noopener,noreferrer')
+  }, [])
 
   const handleDonate = useCallback(() => {
     if (!address) { toast.error('पहले वॉलेट कनेक्ट करें'); return }
@@ -429,10 +425,9 @@ function FaucetTab({ address, chainId }: { address?: `0x${string}`; chainId?: nu
 
   useEffect(() => {
     if (claimSuccess) {
-      if (mode === 'claim') toast.success('1.00 USDC मिल गया! 🎉', { description: 'Test tokens claimed successfully' })
-      else toast.success('शुक्रिया! 🙏 Donation received')
+      toast.success('शुक्रिया! 🙏 Donation received')
     }
-  }, [claimSuccess, mode])
+  }, [claimSuccess])
 
   return (
     <div className="chai-card blue-accent" style={{ position: 'relative' }}>
@@ -474,8 +469,8 @@ function FaucetTab({ address, chainId }: { address?: `0x${string}`; chainId?: nu
             <span>☝️ Wallet connect करें पहले</span>
           </div>
         ) : mode === 'claim' ? (
-          <button className="btn-faucet" onClick={handleClaim} disabled={claimPending || claimConfirming}>
-            💧 {claimPending ? 'Confirming…' : claimConfirming ? 'Processing…' : 'Claim 1.00 USDC Test Token'}
+          <button className="btn-faucet" onClick={handleClaim}>
+            💧 Get free test USDC (Circle Faucet)
           </button>
         ) : (
           <button className="btn-terra" onClick={handleDonate} disabled={claimPending || claimConfirming}>
@@ -501,7 +496,7 @@ function DairyTab() {
         <div>
           <div className="card-title">
             A2 Village Dairy Ledger
-            <span className="tag-new">LIVE</span>
+            <span className="tag-new">DEMO</span>
           </div>
           <div className="card-subtitle">शुद्ध गाय का दूध — ऑन-चेन ट्रैकिंग</div>
         </div>
