@@ -24,7 +24,7 @@ export const arcTestnet = defineChain({
   blockExplorers: {
     default: {
       name: 'ArcScan',
-      url: 'https://testnet.arcscan.app',
+      url: 'https://explorer.testnet.arc.io',
     },
   },
   testnet: true,
