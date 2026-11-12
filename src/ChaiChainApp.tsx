@@ -11,10 +11,10 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
   useSwitchChain,
-  useConnect,
   useDisconnect,
 } from 'wagmi'
 import { erc20Abi } from 'viem'
+import { ConnectKitButton } from 'connectkit'
 import { toast } from 'sonner'
 import { getUsdc, buildTxExplorerUrl, buildAddressExplorerUrl } from '@/onchain-facts'
 import { parseAmount, usdcDecimalsFor } from '@/onchain-money'
@@ -109,46 +109,36 @@ function KulhadArt({ fillColor, fillH, selected }: { fillColor: string; fillH: s
 }
 
 function MadhuWalletConnect() {
-  const { address, isConnected } = useAccount()
-  const { connectors, connect, isPending } = useConnect()
   const { disconnect } = useDisconnect()
 
-  const handleConnect = () => {
-    if (typeof window !== 'undefined' && (window as unknown as { ethereum?: unknown }).ethereum) {
-      const injectedConn = connectors.find(c => c.id === 'injected' || c.type === 'injected')
-      if (injectedConn) {
-        connect({ connector: injectedConn })
-        return
-      }
-    }
-    if (connectors.length > 0) {
-      connect({ connector: connectors[0] })
-    } else {
-      toast.error('कोई वॉलेट नहीं मिला!')
-    }
-  }
-
-  if (isConnected && address) {
-    return (
-      <button 
-        className="btn-secondary" 
-        style={{ borderRadius: '10px', fontSize: '12px', padding: '8px 14px', background: '#2a160c', color: '#f5d78e', border: '1px solid #78350f' }}
-        onClick={() => disconnect()}
-      >
-        {fmt(address)} (Disconnect)
-      </button>
-    )
-  }
-
+  // ConnectKit's wallet picker lists every wallet: browser/in-app wallets (Brave,
+  // MetaMask, Trust...), Coinbase, and WalletConnect (QR + mobile deep links).
   return (
-    <button 
-      className="btn-primary" 
-      style={{ borderRadius: '10px', fontSize: '13px', padding: '8px 16px', background: '#C86D3B', color: '#fff', border: 'none', cursor: 'pointer' }}
-      onClick={handleConnect}
-      disabled={isPending}
-    >
-      {isPending ? 'Connecting…' : 'Connect Wallet'}
-    </button>
+    <ConnectKitButton.Custom>
+      {({ isConnected, isConnecting, show, address, truncatedAddress }) => {
+        if (isConnected && address) {
+          return (
+            <button
+              className="btn-secondary"
+              style={{ borderRadius: '10px', fontSize: '12px', padding: '8px 14px', background: '#2a160c', color: '#f5d78e', border: '1px solid #78350f' }}
+              onClick={() => disconnect()}
+            >
+              {truncatedAddress ?? fmt(address)} (Disconnect)
+            </button>
+          )
+        }
+        return (
+          <button
+            className="btn-primary"
+            style={{ borderRadius: '10px', fontSize: '13px', padding: '8px 16px', background: '#C86D3B', color: '#fff', border: 'none', cursor: 'pointer' }}
+            onClick={() => show?.()}
+            disabled={isConnecting}
+          >
+            {isConnecting ? 'Connecting…' : 'Connect Wallet'}
+          </button>
+        )
+      }}
+    </ConnectKitButton.Custom>
   )
 }
 
@@ -733,6 +723,8 @@ export default function MadhuChaiWalaApp() {
   const [tab, setTab] = useState<Tab>('menu')
   const { address, isConnected, chainId } = useAccount()
 
+  const { switchChain } = useSwitchChain()
+
   const { data: usdcBalance } = useReadContract({
     address: USDC_ADDRESS,
     abi: erc20Abi,
@@ -778,7 +770,12 @@ export default function MadhuChaiWalaApp() {
             <span style={{ fontSize: 11, color: 'var(--text-lo)', fontFamily: 'var(--font-mono)' }}>{fmt(address)}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {chainId !== TARGET_CHAIN_ID && (
-                <span style={{ fontSize: 10, color: '#F1C40F', border: '1px solid #F1C40F44', borderRadius: 6, padding: '2px 7px' }}>Wrong Network</span>
+                <button
+                  onClick={() => switchChain({ chainId: TARGET_CHAIN_ID })}
+                  style={{ fontSize: 10, color: '#F1C40F', background: 'transparent', border: '1px solid #F1C40F44', borderRadius: 6, padding: '2px 7px', cursor: 'pointer' }}
+                >
+                  Wrong Network — Switch to Arc
+                </button>
               )}
               <span className="usdc-badge">
                 <TokenUSDC variant="branded" size={12} />
